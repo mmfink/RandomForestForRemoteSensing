@@ -1,8 +1,22 @@
 randomForest Classification
 ================
 
+## Table of Contents
+
+  - [Project Summary](#project-summary)
+  - [Source History](#source-history)
+  - [To Use](#to-use)
+      - [Environment](#environment)
+      - [Required inputs](#required-inputs--)
+      - [Setting variables and output
+        options](#setting-variables-and-output-options)
+      - [Training data assessment](#training-data-assessment)
+      - [Classification outputs](#classification-outputs)
+  - [Disclaimer](#disclaimer)
+
 ## Project Summary
 
+[Top](#table-of-contents)  
 This is a tool (R script) to do image classification such as land cover
 classification using a random forests classifier. This is a work in
 progress and the intent is to provide robust methods that can be used by
@@ -38,6 +52,7 @@ in the training data.
 
 ## Source History
 
+[Top](#table-of-contents)  
 This is a fork of Ned Horning’s [randomForest
 Classification](https://bitbucket.org/rsbiodiv/randomforestclassification/src)
 repository. The original script and instructions for use were written by
@@ -85,6 +100,7 @@ Conservation. Available from <http://biodiversityinformatics.amnh.org/>.
 
 ### Environment
 
+[Top](#table-of-contents)  
 The script was built on R 3.4.4 using the following required packages:
 
   - sf 0.7.3
@@ -93,15 +109,16 @@ The script was built on R 3.4.4 using the following required packages:
   - randomForest 4.6.14
   - doSNOW 1.0.16
 
-As of 2019-05-08 the package sp 1.3.1 is also required, though the
+As of 2019-05-21 the package sp 1.3.1 is also required, though the
 intention is to transition entirely to sf.
 
 ### Required inputs
 
-  - Training polygons, in
-    [shapefile](https://en.wikipedia.org/wiki/Shapefile) format.
-  - Multi-band raster of inputs to classify, in
-    [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) format.
+[Top](#table-of-contents)  
+\+ Training polygons, in
+[shapefile](https://en.wikipedia.org/wiki/Shapefile) format. +
+Multi-band raster of inputs to classify, in
+[GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) format.
 
 These spatial layers must be in the same geospatial coordinate system.
 The training polygons are used to tell the program what to look for when
@@ -142,6 +159,7 @@ they just represent ‘my class’ and ‘not my class’.
 
 ### Setting variables and output options
 
+[Top](#table-of-contents)  
 The variables that need to be set within the script, under the **‘SET
 VARIABLES HERE’** section near the top, are detailed below.
 
@@ -209,7 +227,7 @@ table that contains the integer class type.
 
 ``` r
 # example
-attName <- "Id"
+attName <- "class"
 ```
 
 #### nd - NoData value
@@ -242,12 +260,81 @@ inImageName <-"environment_5band.tif"
 inImageName <- "C:/inputs/environment_5band.tif"
 ```
 
-#### outMarginFile - Optional
+#### outMarginFile - Margin of error
+
+**Optional** Name and path for the output margin shapefile (more
+explanation in the next section). If this output is not needed, enter an
+empty string. Because this file is useful during iterative assessment
+and refinement of the classification, you are not allowed to (presumably
+accidentally) overwrite an existing file of the same name. So make sure
+you change the file name each time you run the script.
+
+``` r
+# example
+outMarginFile <- "C:/outputs/margin_1.shp"
+
+# or, if you do not want this output
+outMarginFile <- ""
+```
+
+#### xBand and yBand - Feature space plot
+
+**Optional** The band numbers to use for the X and Y axes of a
+2-dimensional feature space plot (more explanation in the next section).
+The first band in a multi-band raster is 1 (i.e., not zero indexed). If
+you do not want to use this feature, assign 0 (zero) to both variables.
+
+``` r
+# example, to create a plot using bands 3 and 4
+xBand <- 3
+yBand <- 4
+
+# or, if you do not want a feature space plot
+xBand <- 0
+yBand <- 0
+```
 
 ### Training data assessment
 
+[Top](#table-of-contents)  
+The option to create a *feature space plot* is to visualize how your
+training data are distributed across feature space. The tools allows you
+to select two bands for the feature space plot axes. After the plot is
+displayed a dialog is printed in the R console that gives you the option
+to use other bands, define a rectangle to locate gaps in feature space,
+cancel the script, or continue on to the random forest model creation.
+If the option to define a rectangle is selected then you need to click
+on the feature space plot to define the upper left and lower right
+corners of a rectangle that falls within a gap in the training data
+plotted on the feature space plot. After the rectangle is selected your
+image will be plotted using the first three bands and all pixels that
+were selected by the rectangle will be displayed in white. After the
+plot is displayed the script will stop so you can add more training data
+to cover the highlighted pixels.
+
+The option to assess training data quality using a metric called the
+*margin* can be used to evaluate how well the classifiction performed.
+The margin of a training sample is the *proportion of votes that sample
+got for the correct class minus maximum proportion of votes for the
+other classes for that sample*. Margin values range from 1 to -1. If
+margin is zero, it means your training class, and another class received
+equal votes for that sample. If it is positive, your training class was
+voted higher than another class which is what you want. If the margin is
+negative, your training class received fewer votes than another class.
+
+The margin data are written to a point shapefile so they can be overlaid
+on the image and training polygons to assess which polygons may need to
+be removed, relabeled, or modified to improve the outcome. It can also
+help determine which classes may need additional training points.
+
+### Classification outputs
+
+[Top](#table-of-contents)  
+*In Work*
+
 ## Disclaimer
 
+[Top](#table-of-contents)  
 The scripts in this repository are free software: you can redistribute
 and/or modify them under the terms of the GNU General Public License as
 published by the Free Software Foundation, either version 3 of the
@@ -256,4 +343,4 @@ License, or (at your option) any later version.
 The scripts are distributed in the hope that they will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
-Public License (**LICENSE** file) for more details.
+Public [License](LICENSE) file for more details.
