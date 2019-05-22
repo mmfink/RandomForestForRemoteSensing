@@ -1,42 +1,31 @@
 #############################################################################
-# The script reads an ESRI Shapefile (defined by the "shapefile" variable) with
-# training polygons and then either selects all pixels or randomly selects a
-# user-determined number of samples (defined using classNums and classSampNums)
-# for each land cover type. A multilayer image that contains spectral, other
-# continuous data or categorical data is also input (defined by the inImage
-# variable). For each randomly selected sample the data values for that pixel
-# are determined and these data are used to run the Random Forest model.
+# ** rf_classification_mmf2019.r -> this file is a work in progress. **
 #
-# After building the model the multilayer image is read, and up to three output
-# images (classImage, probImage, threshImage) can be selected.
-#     "classImage" classifies all of the pixels.
+# For full instructions on the use of this script, see
+# https://github.com/mmfink/RandomForestForRemoteSensing/blob/mmf_working/randomForestClassification/Readme.md
 #
-#     "probImage" outputs the class probability of the class that got the most votes
-#      (i.e., the class that was selected for the classImage layer).
+# The script reads an ESRI Shapefile of training polygons and then either
+# selects all pixels or randomly selects a user-determined number of samples
+# for each "land cover" type. A multiband image that contains spectral, other
+# continuous and/or categorical data is also input. For each sample point, values
+# from each band of the multiband image for that pixel are determined and these
+# data are used to run the Random Forest model.
 #
-#     "threshImage" is the same as "classImage" except all pixels with a class probability
-#      of the class that got the most votes below the "probThreshold" parameter are set to 0.
-#      This is useful to identify pixels with inter-class confusion.
+# After building the model the multiband image is read, and two output
+# images are created:
+#     "classImage" classifies all of the pixels to one of the "land cover" types.
 #
-# The images are written out using the GeoTIFF format and the file name is created by appending
-# "_Class" to the input image file name and it is written to the same directory as the input
-# image. A variable importance plot is displayed to provide information
-# about the influence of each variable. An error rate estimate and confusion matrix are also
-# printed to provide information about classification accuracy.
+#     "probImage" outputs the probability of the above class assignment being correct.
 #
-# There is an option to assess the quality of the training data. The metric for this
-# is the margin. The margin of a training point is the proportion of votes for the correct
-# class minus maximum proportion of votes for the other classes for that segment. Positive margin
-# values represent correct classification, and vice versa. The margin data are written to a
-# point ESRI Shapefile so they can be overlaid on the image and training polygons to assess which
-# points need to be removed and relabeled in the training data and it can help determine which
-# classes needs additional training segments. If this output is not needed you can enter two
-# double or single-quotes ("" or '') for the variable outPointsFile.
+# The images are written out using the GeoTIFF format and the file name is created
+# by appending "_Class" or "_Prob", respectively, to the input image file name
+# and are written to the same directory as the input multiband image. A variable
+# importance plot is displayed to provide information about the influence of each
+# variable (= band in the multiband image). An error rate estimate and confusion
+# matrix are also plotted to provide information about classification accuracy.
 #
-# There is also an option to output a feature space plot using two bands of your choice.
-# If a feature space plot is not needed then enter "0" for the variables xBand and/or yBand.
-# When a feature space plot is drawn it is possible to define a rectange on the plot to highlight
-# pixels in the image that are not well represented in the trianing data.
+# There are several other output options which are explained in the above referenced
+# Readme.md file.
 #
 # Set the variables below in the "SET VARIABLES HERE" section of the script.
 ##############################################################################
