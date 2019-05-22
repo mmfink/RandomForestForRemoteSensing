@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
   - [Source History](#source-history)
   - [To Use](#to-use)
     - [Environment](#environment)
-    - [Required inputs  ](#required-inputs--)
+    - [Required inputs](#required-inputs)
     - [Setting variables and output options](#setting-variables-and-output-options)
     - [Training data assessment](#training-data-assessment)
     - [Classification outputs](#classification-outputs)
@@ -36,7 +36,7 @@ This is a fork of Ned Horning's [randomForest Classification](https://bitbucket.
 
 Modifications to the original work are by Michelle M. Fink, Colorado Natural Heritage Program, Colorado State University [michelle.fink@colostate.edu]. Contributions for further improvements are welcome and all contributors will be credited.  
 
-The original work by Ned Horning was licensed under the GNU General Public License version 2 (GPL2, https://www.gnu.org/licenses/old-licenses/gpl-2.0.html). It is being redistributed with modifications under GPL3 (https://www.gnu.org/licenses/gpl.html), as allowed by the original license. For a list of modifications, see the git commit history. See the **LICENSE** file in this repository for full text of the GPL3 license.
+The original work by Ned Horning was licensed under the GNU General Public License version 2 (GPL2, https://www.gnu.org/licenses/old-licenses/gpl-2.0.html). It is being redistributed with modifications under GPL3 (https://www.gnu.org/licenses/gpl.html), as allowed by the original license. For a list of modifications, see the git commit history. See the [License](LICENSE) file in this repository for full text of the GPL3 license.
 
 Parts of this Readme file are based on the original user guide, which is licensed under a [Creative Commons Attribution-Share Alike 3.0 License](https://creativecommons.org/licenses/by-sa/3.0/us/) (CC BY-SA 3.0 US). This Readme is therefore likewise licensed under CC BY-SA 3.0 US. You are free to alter the work, copy, distribute, and transmit the document under the following conditions:  
 
@@ -61,12 +61,13 @@ As of `r Sys.Date()` the package sp `r packageVersion("sp")` is also required, t
 
 ### Required inputs  
 [Top](#table-of-contents)  
+
 + Training polygons, in [shapefile](https://en.wikipedia.org/wiki/Shapefile) format.
 + Multi-band raster of inputs to classify, in [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) format.
   
-These spatial layers must be in the same geospatial coordinate system. The training polygons are used to tell the program what to look for when classyfing the multi-band raster into discrete 'land cover' types. I use 'land cover' in quotes, because the multi-band raster can contain any manner of continuous or categorical data. These can include satellite spectral imagery, aerial photography, climate models, geology or soil types, or anything else that can help inform your intended classification goals, whether or not you are trying to identify actual land cover or something else entirely. But for simplicity, the term 'land cover' will be used here.  
+These spatial layers must be in the same geospatial coordinate system. The training polygons are used to tell the program what to look for when classyfing the multi-band raster into discrete "land cover" types. I use "land cover" in quotes, because the multi-band raster can contain any manner of continuous or categorical data. These can include satellite spectral imagery, aerial photography, climate models, geology or soil types, or anything else that can help inform your intended classification goals, whether or not you are trying to identify actual land cover or something else entirely. But for simplicity, the term "land cover" will be used here.  
 
-Draw the training polygons around one or more examples of each known 'land cover' type. The random forest algorithm is non-parametric so it is not necessary to keep training areas homogeneous. For example, you can have a 'cloud and shadow' class with both clouds and shadows in it. You can have as many polygons that you want for any class. Identify what class each polygon belongs to with an integer *class type*. Any other field in the attribute table will be ignored by the program, but for your own use, it is helpful to have a descriptive text field identifying the classes. For example:  
+Draw the training polygons around one or more examples of each known "land cover" type. The random forest algorithm is non-parametric so it is not necessary to keep training areas homogeneous. For example, you can have a "cloud and shadow" class with both clouds and shadows in it. You can have as many polygons that you want for any class. Identify what class each polygon belongs to with an integer *class type*. Any other field in the attribute table will be ignored by the program, but for your own use, it is helpful to have a descriptive text field identifying the classes. For example:  
   
 | id | class | cover |
 |:------:|:------:|:------:|
@@ -79,11 +80,11 @@ Draw the training polygons around one or more examples of each known 'land cover
 | 6 | 1 | Tall shrub |
 | 7 | 2 | Short shrub |
   
-Here, 'id' is the polygon identifier, 'class' is the required integer class type, and 'cover' is a description of the class type. You must have at least two class types defined in the training shapefile, even if they just represent 'my class' and 'not my class'.
+Here, "id" is the polygon identifier, "class" is the required integer class type, and "cover" is a description of the class type. You must have at least two class types defined in the training shapefile, even if they just represent "my class" and "not my class".
 
 ### Setting variables and output options
 [Top](#table-of-contents)  
-The variables that need to be set within the script, under the **'SET VARIABLES HERE'** section near the top, are detailed below.
+The variables that need to be set within the script, under the **"SET VARIABLES HERE"** section near the top, are detailed below.
 
 #### setwd - Working Directory
 **Required**

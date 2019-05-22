@@ -7,7 +7,7 @@ randomForest Classification
   - [Source History](#source-history)
   - [To Use](#to-use)
       - [Environment](#environment)
-      - [Required inputs](#required-inputs--)
+      - [Required inputs](#required-inputs)
       - [Setting variables and output
         options](#setting-variables-and-output-options)
       - [Training data assessment](#training-data-assessment)
@@ -74,7 +74,7 @@ Public License version 2 (GPL2,
 redistributed with modifications under GPL3
 (<https://www.gnu.org/licenses/gpl.html>), as allowed by the original
 license. For a list of modifications, see the git commit history. See
-the **LICENSE** file in this repository for full text of the GPL3
+the [License](LICENSE) file in this repository for full text of the GPL3
 license.
 
 Parts of this Readme file are based on the original user guide, which is
@@ -109,32 +109,33 @@ The script was built on R 3.4.4 using the following required packages:
   - randomForest 4.6.14
   - doSNOW 1.0.16
 
-As of 2019-05-21 the package sp 1.3.1 is also required, though the
+As of 2019-05-22 the package sp 1.3.1 is also required, though the
 intention is to transition entirely to sf.
 
 ### Required inputs
 
-[Top](#table-of-contents)  
-\+ Training polygons, in
-[shapefile](https://en.wikipedia.org/wiki/Shapefile) format. +
-Multi-band raster of inputs to classify, in
-[GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) format.
+[Top](#table-of-contents)
+
+  - Training polygons, in
+    [shapefile](https://en.wikipedia.org/wiki/Shapefile) format.
+  - Multi-band raster of inputs to classify, in
+    [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) format.
 
 These spatial layers must be in the same geospatial coordinate system.
 The training polygons are used to tell the program what to look for when
-classyfing the multi-band raster into discrete ‘land cover’ types. I use
-‘land cover’ in quotes, because the multi-band raster can contain any
+classyfing the multi-band raster into discrete “land cover” types. I use
+“land cover” in quotes, because the multi-band raster can contain any
 manner of continuous or categorical data. These can include satellite
 spectral imagery, aerial photography, climate models, geology or soil
 types, or anything else that can help inform your intended
 classification goals, whether or not you are trying to identify actual
 land cover or something else entirely. But for simplicity, the term
-‘land cover’ will be used here.
+“land cover” will be used here.
 
 Draw the training polygons around one or more examples of each known
-‘land cover’ type. The random forest algorithm is non-parametric so it
+“land cover” type. The random forest algorithm is non-parametric so it
 is not necessary to keep training areas homogeneous. For example, you
-can have a ‘cloud and shadow’ class with both clouds and shadows in it.
+can have a “cloud and shadow” class with both clouds and shadows in it.
 You can have as many polygons that you want for any class. Identify what
 class each polygon belongs to with an integer *class type*. Any other
 field in the attribute table will be ignored by the program, but for
@@ -152,16 +153,16 @@ the classes. For example:
 | 6  |   1   | Tall shrub  |
 | 7  |   2   | Short shrub |
 
-Here, ‘id’ is the polygon identifier, ‘class’ is the required integer
-class type, and ‘cover’ is a description of the class type. You must
+Here, “id” is the polygon identifier, “class” is the required integer
+class type, and “cover” is a description of the class type. You must
 have at least two class types defined in the training shapefile, even if
-they just represent ‘my class’ and ‘not my class’.
+they just represent “my class” and “not my class”.
 
 ### Setting variables and output options
 
 [Top](#table-of-contents)  
-The variables that need to be set within the script, under the **‘SET
-VARIABLES HERE’** section near the top, are detailed below.
+The variables that need to be set within the script, under the **“SET
+VARIABLES HERE”** section near the top, are detailed below.
 
 #### setwd - Working Directory
 
