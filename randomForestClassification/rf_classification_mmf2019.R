@@ -98,21 +98,28 @@ probThreshold <- 75
 xBand <- 0
 yBand <- 0
 #######################################################################################
-#
+
 # Do some basic error checking
 if (!file.exists(shapefile)){
   cat("\n***************Cannot find input shapefile***************** \n")
   stop("Please check for typos in what you entered for shapefile\n", call.=FALSE)
 }
+
 if (!file.exists(inImageName)){
   cat("\n***************Cannot find input raster***************** \n")
   stop("Please check for typos in what you entered for inImageName\n", call.=FALSE)
 }
+
 if (file.exists(outMarginFile)){
   cat("\n***************Output Margin File already exists***************** \n")
   stop("Please supply a unique filename to variable outMarginFile\n", call.=FALSE)
 }
-# Start processing
+
+if (length(classNums) != length(classSampNums)) {
+  cat("\n******classNums and classSampNums must have the same number of values****** \n")
+  stop("Check the classNums and classSampNums variables\n", call.=FALSE)
+}
+
 # Read the Shapefile
 vec <- st_read(shapefile)
 
@@ -121,15 +128,8 @@ satImage <- brick(inImageName)
 NAvalue(satImage) <- nd
 
 # Create vector of unique land cover attribute values
-##allAtt <- vec@data
-tabAtt <-table(vec[[attName]])
-uniqueAtt <-as.numeric(names(tabAtt))
-
-# Check if length of classNums and classSampNums is equal
-if (length(classNums) != length(classSampNums)) {
-  cat("\n******classNums and classSampNums must have the same number of values****** \n")
-  stop("Check the classNums and classSampNums variables\n", call.=FALSE)
-}
+tabAtt <- table(vec[[attName]])
+uniqueAtt <- as.numeric(names(tabAtt))
 
 # Check if all classNums exist in uniqueAtt
 if (sum(classNums %in% uniqueAtt) != length(uniqueAtt)) {
@@ -137,17 +137,16 @@ if (sum(classNums %in% uniqueAtt) != length(uniqueAtt)) {
   stop("Check classNums and vector attribute table\n", call.=FALSE)
 }
 
-# Create input data from a Shapefile using all training data
-cat("Create training data using all pixels in training polygons\n")
+# Create training data
+cat("Create training data to train model\n")
 predictors <- data.frame()
 response <- numeric()
 xyCoords <- data.frame()
 
-cat("Create training data to train model\n")
-# If all pixels in a polygon are to be used process this block
 for (n in 1:length(classNums)) {
-  # Get the metadata for all polygons for a particular class (based on the uniqueAtt variable)
-  class_data<- vec[vec[[attName]]==classNums[n],]
+  # Figure out which polygons belong to a particular class (based on the uniqueAtt variable)
+  class_data <- vec[vec[[attName]] == classNums[n],]
+  # If all pixels in a polygon are to be used...
   if (classSampNums[n] == 0) {
     # Extract and combine predictor and response variables for each polygon within a class
     for (i in 1:dim(class_data)[1]) {
@@ -158,36 +157,31 @@ for (n in 1:length(classNums)) {
       response <- c(response, attributeVector)
     }
   } else {
-    # Create input data from a Shapefile by sampling training data polygons
+    # ...else create input data by sampling training data polygons
+    # Note that the number of points might not match numsamps exactly.
     # Get the area of each polygon for a particular class
     areas <- st_area(class_data)
-    # Calculate the number of samples for each polygon based on the area in proportion to total area for a class
+    # Calculate the number of samples for each polygon based on the area in proportion
+    # to total area for a class
     nsamps <- as.vector(ceiling(classSampNums[n]*(areas/sum(areas))))
-    # Use random sampling to select training points (proportional based on area) from each polygon for a given class
+    # Use random sampling to select training points (proportional based on area)
+    # from each polygon for a given class
     xy_class <- st_sample(class_data, size = nsamps, type = "random")
-    # Add coordinates to create a list of random points for all polygons
-    ##if (i == 1) {cpts <- xy_class} else {cpts <- st_sfc(cpts, xy_class)}
-
-    # The number of points might not match numsamps exactly.
-    ## xyCoords <- rbind(xyCoords, cpts)
-    ## xy_ForClass <- st_sf(xyCoords)
-
     # Get class number for each sample point for response variable
     attributeVector <- rep.int(classNums[n], length(xy_class))
     response <- c(response, attributeVector)
-    ##response <- c(response, over(as(cpts, "Spatial"), as(vec, "Spatial"))[[attName]])
-
-    # Get pixel DNs from the image for each sample point
+    # Get pixel values from the image for each sample point
     predictors <- rbind(predictors, extract(satImage, as_Spatial(xy_class)))
   }
 }
 
 trainvals <- cbind(response, predictors)
 
-# Test if feature space plot is needed
+# If feature space plot is needed...
 if (xBand != 0 & yBand != 0) {
   #Plot feature space and samples
   continue <- "c"
+
   while (continue == "c") {
     plotImage <- stack(satImage[[xBand]], satImage[[yBand]])
     # Get pixel values from the image under each sample point and create a table with
@@ -204,24 +198,27 @@ if (xBand != 0 & yBand != 0) {
     maxBand2 <- max(featurePlotPoints[,2])
     rangeBand1 <- maxBand1 - minBand1 + 1
     rangeBand2 <- maxBand2 - minBand2 + 1
-
     xAxisLabel <- paste("Layer", xBand, sep=" ")
     yAxisLabel <- paste("Layer", yBand, sep=" ")
 
     plot(featurePlotPoints[,1], featurePlotPoints[,2], col="lightgrey", xlab=xAxisLabel, ylab=yAxisLabel)
-
     uniqueValues <- unique(trainvals[,1])
+
     for (v in 1:length(uniqueValues)) {
-      points(trainvals[which(trainvals[,1]==uniqueValues[v]), xBand+1], trainvals[which(trainvals[,1]==uniqueValues[v]), yBand+1], col=v, pch=20)
+      points(trainvals[which(trainvals[,1] == uniqueValues[v]), xBand+1],
+             trainvals[which(trainvals[,1] == uniqueValues[v]), yBand+1], col=v, pch=20)
     }
 
     legend(minBand1, maxBand2, col=1:v, pch=20, title="Classes", legend=as.character(uniqueValues))
-
-    continue <- readline(prompt="Type n to stop, c to change feature space bands, s to define a rectangle to locate gaps in feature space, or any other key to continue with random forests model creation and prediciton: \n\n")
+    continue <- readline(prompt="Type n to stop, c to change feature space bands,
+                         s to define a rectangle to locate gaps in feature space,
+                         or any other key to continue with random forests model
+                         creation and prediciton: \n\n")
 
     if (substr(continue, 1,1) == "n") {
       stop("Processing stopped at users request \n\n", call.=FALSE)
     }
+
     if (substr(continue, 1,1) == "s") {
       cat("Click two points to define the area on the feature space plot that you want to highlight\n")
       coords <- locator(n=2)
@@ -256,6 +253,7 @@ if (xBand != 0 & yBand != 0) {
       cat("White pixels in the plotted image were selected in the rectangle drawn on the feature space plot")
       stop("Add new training data and re-run the script \n\n", call.=FALSE)
     }
+
     if (substr(continue, 1,1) == "c") {
       xBand <- as.numeric(readline(prompt="Enter the band number for the x axis: \n"))
       yBand <- as.numeric(readline(prompt="Enter the band number for the y axis: \n"))
@@ -266,7 +264,7 @@ if (xBand != 0 & yBand != 0) {
 # Remove NA values
 trainvals <- na.omit(trainvals)
 
-# Check to make sure Shapefile and input image are in the same projection
+# Check to make sure we have any training values to work with
 if (nrow(trainvals) == 0) {
   cat("\n*************************No training data found**************************** \n")
   stop("Attribute name is case sensitive & geospatial projections must match.\nCheck these things and run again", call.=FALSE)
@@ -274,23 +272,28 @@ if (nrow(trainvals) == 0) {
 
 # Run Random Forest
 cat("Calculating random forest object\n")
+# TODO: Figure out if the default settings are really the best for this purpose.
 randfor <- randomForest(as.factor(response) ~., data=trainvals, importance=TRUE, na.action=na.omit)
 
 ############################# Experimental Parallel Processing #############################
-# NOTE: Doing away with the ThreshImage option, since that is easy enough to create later.
+# TODO: add sane user variable options for blocksize and cluster at beginning of script.
 library(doSNOW)
 
 # Start predictions
 cat("Starting predictions\n")
-# Calculate the image block size for processing
-bs <- blockSize(satImage, minrows = floor(nrow(satImage)/80)) #try to balance speed vs. memory use
 
+# Output file names
 extensionName <- unlist(strsplit(inImageName, "\\."))[length(unlist(strsplit(inImageName, "\\.")))]
 outFileBaseName <- unlist(strsplit(inImageName, paste("\\.", extensionName, sep="")))[1]
 
+# Calculate the image block size for processing
+bs <- blockSize(satImage, minrows = floor(nrow(satImage)/80)) #try to balance speed vs. memory use
+
+# Start parallel cluster of workers
 cl <- makeCluster(16, type = 'SOCK') #Modeling server only!
 registerDoSNOW(cl)
 
+# Functions to feed to workers
 procbloc_class <- function(i, bs, satImage, randfor){
   startrow <- bs$row[i]
   numrows <- bs$nrows[i]
@@ -311,6 +314,8 @@ procbloc_prob <- function(i, bs, satImage, randfor){
   return(chunk)
 }
 
+# FIXME: I don't think I've set this up very efficiently...needs work
+# Create class type output
 if (classImage) {
   startTime <- Sys.time()
   cat("Class Raster Start time", format(startTime),"\n")
@@ -323,6 +328,7 @@ if (classImage) {
   cat("\nClass Raster Processing time", format(timeDiff), "\n")
 }
 
+# Create probability output
 if (probImage) {
   startTime <- Sys.time()
   cat("Probability Raster Start time", format(startTime),"\n")
@@ -335,6 +341,7 @@ if (probImage) {
   cat("\nProbability Raster Processing time", format(timeDiff), "\n")
 }
 
+# Release the cluster
 stopCluster(cl)
 ############################# End Experimental Parallel Processing #############################
 
@@ -345,12 +352,14 @@ cat("OOB error rate estimate\n", 1 - (sum(diag(confMatrix)) / sum(confMatrix[,1:
 cat("Confusion matrix\n")
 print(randfor$confusion)
 cat("\n")
+# Plotting variable importance plot
+varImpPlot(randfor)
 
+# If Margin output requested
 if (outMarginFile != "") {
   # Calculate margin (proportion of votes for correct class minus maximum proportion of votes for other classes)
   marginData <- margin(randfor)
   trainingAccuracy <- cbind(marginData[order(marginData)], trainvals[order(marginData),1])
-
   # Add column names to attributes table
   colnames(trainingAccuracy) <- c("margin", "classNum")
   # Order X and Y coordinates
@@ -361,5 +370,4 @@ if (outMarginFile != "") {
   writeOGR(pointVector, outMarginFile, "layer", driver="ESRI Shapefile", check_exists=TRUE)
 }
 
-# Plotting variable importance plot
-varImpPlot(randfor)
+cat("Script complete.")
